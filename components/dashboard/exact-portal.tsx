@@ -2127,9 +2127,14 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
         if (!name) { notify("Please enter your name"); return; }
         try {
           await apiRequest("/teachers/me", { method: "PATCH", data: { name, phone, qualifications, bio } });
-          await syncStaff();
-          await apiRequest("/auth/profile").catch(() => null);
-          notify("Teacher profile saved \u2714");
+          const refreshed = await apiRequest("/teachers/me").catch(() => null);
+          const me = refreshed?.data ?? refreshed;
+          if (me?.name) {
+            const profiles = win.teacherProfiles || {};
+            profiles[me.name] = { name: me.name, phone: me.phone ?? "", qualifications: me.qualifications ?? "", bio: me.bio ?? "" };
+            win.teacherProfiles = profiles;
+          }
+          notify("Profile saved \u2714");
           if (typeof win.navigate === "function") win.navigate("teacherprofile");
         } catch (error) {
           notify("Profile save failed: " + errorMessage(error, "unknown error"));
