@@ -2157,7 +2157,7 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
         try {
           await apiRequest("/staff-attendance/bulk", { method: "POST", data: { date: today, records } });
           const refreshed = await fetchOptional("/staff-attendance", { query: { fromDate: today, toDate: today } });
-          const items = Array.isArray(refreshed) ? refreshed : (refreshed?.items ?? refreshed?.data?.items ?? []);
+          const items = Array.isArray(refreshed) ? refreshed : ((refreshed as any)?.items ?? (refreshed as any)?.data?.items ?? []);
           win.staffAttendanceRows = [...(win.staffAttendanceRows || []).filter((r: any) => r.date !== today), ...items];
           if (typeof win.toast === "function") win.toast("Staff attendance saved \u2714");
           if (typeof win.navigate === "function") win.navigate("teacherattendance");
@@ -2251,7 +2251,7 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
         try {
           await apiRequest("/staff-attendance/bulk", { method: "POST", data: { date: today, records } });
           const refreshed = await fetchOptional("/staff-attendance", { query: { fromDate: today, toDate: today } });
-          const items = Array.isArray(refreshed) ? refreshed : (refreshed?.items ?? refreshed?.data?.items ?? []);
+          const items = Array.isArray(refreshed) ? refreshed : ((refreshed as any)?.items ?? (refreshed as any)?.data?.items ?? []);
           win.staffAttendanceRows = [...(win.staffAttendanceRows || []).filter((r: any) => r.date !== today), ...items];
           if (typeof win.toast === "function") win.toast("Staff attendance saved \u2714");
           if (typeof win.navigate === "function") win.navigate("teacherattendance");
