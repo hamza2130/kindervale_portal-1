@@ -548,9 +548,41 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
       .map(({ id, source, title, body }: any) => ({ id, source, title, body }));
   };
 
-  const assignScriptData = (values: Record<string, any>) => {
+  // The legacy UI builds every screen by interpolating values straight into template strings
+  // and assigning the result to innerHTML -- about 1,100 interpolations, roughly 170 of them
+  // carrying text somebody typed. There is no escaping anywhere in it, so a name or a leave
+  // reason containing markup executes as script in whoever opens that screen. A parent can
+  // file a leave request, and an admin reads the reason on their own screen, so the payload
+  // crosses privilege levels.
+  //
+  // Escaping happens here, at the single point where backend data crosses into that code,
+  // rather than at the 170 call sites: one place to get right, and impossible to forget when
+  // adding a screen later. Values are only ever rendered as HTML -- nothing downstream assigns
+  // them to .value or .textContent, where entities would show through as literal "&amp;".
+  const escapeForMarkup = (value: any): any => {
+    if (typeof value === "string") {
+      return value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+    if (Array.isArray(value)) return value.map(escapeForMarkup);
+    if (value && typeof value === "object") {
+      // Date and similar built-ins must survive untouched; only plain payload objects recurse.
+      if (Object.getPrototypeOf(value) !== Object.prototype) return value;
+      const out: Record<string, any> = {};
+      for (const [k, v] of Object.entries(value)) out[k] = escapeForMarkup(v);
+      return out;
+    }
+    return value;
+  };
+
+  const assignScriptData = (rawValues: Record<string, any>) => {
     if (typeof window === "undefined") return;
     const win = window as any;
+    const values = escapeForMarkup(rawValues) as Record<string, any>;
     Object.entries(values).forEach(([key, value]) => {
       win[key] = value;
     });
