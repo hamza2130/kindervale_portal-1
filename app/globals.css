@@ -338,6 +338,13 @@
   .child-hero .kv-info{flex:1;min-width:0}
   .child-hero .kv-info b{color:var(--navy);font-size:18px;display:block}
   .child-hero .kv-info small{color:var(--muted);font-size:12px}
+  /* On phones the name/room text was squeezed to ~110px beside the button and the button overlapped it. */
+  @media(max-width:520px){
+    .child-hero .kv-child{flex-wrap:wrap;gap:14px;padding:18px 16px}
+    .child-hero .kv-avatar{width:52px;height:52px;font-size:20px}
+    .child-hero .kv-info{flex:1 1 calc(100% - 70px)}
+    .child-hero .kv-child .btn{flex:1 1 100%;justify-content:center;min-height:44px}
+  }
  
   /* The drawer backdrop must not participate in the desktop portal grid. */
   .side-scrim{display:none}
