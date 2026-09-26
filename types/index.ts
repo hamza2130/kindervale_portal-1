@@ -1,4 +1,4 @@
-export type Role = "admin" | "daycareadmin" | "daycare_admin" | "principal" | "teacher" | "parent";
+export type Role = "admin" | "daycareadmin" | "daycare_admin" | "principal" | "teacher" | "parent" | "accountant";
 
 export interface User {
   id: string;

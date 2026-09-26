@@ -40,6 +40,7 @@ function normalizeBackendRole(role: unknown): Role {
   if (normalized === "principal") return "principal";
   if (normalized === "teacher") return "teacher";
   if (normalized === "parent") return "parent";
+  if (normalized === "accountant") return "accountant";
 
   throw new Error(`Login response included an unsupported role: ${role}`);
 }
