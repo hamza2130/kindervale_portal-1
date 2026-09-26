@@ -321,8 +321,9 @@
 
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:20px}
   .tag{display:inline-block;font-size:11px;font-weight:700;background:var(--sky2);color:#fff;padding:3px 10px;border-radius:6px;margin:2px;letter-spacing:.2px}
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:14px 24px;border-radius:14px;box-shadow:var(--shadow);font-weight:700;z-index:200;opacity:0;transition:opacity .3s,transform .3s}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:14px 24px;border-radius:14px;box-shadow:var(--shadow);font-weight:700;z-index:200;opacity:0;transition:opacity .3s,transform .3s;max-width:90vw;text-align:center}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+  .toast.error{background:var(--bad)}
   textarea{width:100%;padding:12px;border:2px solid var(--line);border-radius:12px;font-family:inherit;font-size:14px;resize:vertical;min-height:70px;background:var(--cream)}
   textarea:focus{outline:none;border-color:var(--teal)}
   /* User overrides: remove decorative dots but keep profile avatar + role badge in top-right */
