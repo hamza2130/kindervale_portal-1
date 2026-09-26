@@ -48,6 +48,7 @@ function writeTeacherAttendanceOverrides(overrides: Record<string, Teacher["atte
 export function mapTeacher(row: Record<string, unknown>): Teacher {
   return {
     id: String(row.id),
+    userId: row.userId ? String(row.userId) : undefined,
     name: String(row.name ?? ""),
     email: String(row.email ?? ""),
     phone: String(row.phone ?? ""),
