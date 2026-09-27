@@ -2623,13 +2623,17 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
             // through this modal (editId only exists for teacher rows in the staff list).
             if (typeof (window as any).toast === "function") (window as any).toast("Accountant accounts can't be edited here");
           } else {
+            // salary is deliberately not sent here: PATCH /teachers/:id no longer accepts it
+            // (decision 6 -- only the Accountant may change a salary after creation, via the
+            // dedicated PATCH /teachers/:id/salary route). Sending it used to 400 the whole
+            // request for any teacher who already had one set, since the backend's
+            // ValidationPipe rejects unrecognized fields outright.
             await apiRequest(`/teachers/${editId}`, {
               method: "PATCH",
               data: {
                 className: formData.department,
                 subject: formData.role || "Teacher",
                 attendance: formData.status === "On Leave" ? "ABSENT" : "PRESENT",
-                salary: formData.salary ? Number(formData.salary) : undefined,
                 makeHomeroom: formData.makeHomeroom === "true"
               }
             });
@@ -3118,8 +3122,14 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
                           value={formData.salary || ""}
                           onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
                           placeholder="e.g. 45000"
-                          style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", background: "#ffffff", color: "#0f172a", fontSize: "15px", pointerEvents: "auto" }}
+                          disabled={Boolean(editId)}
+                          style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", background: editId ? "#f1f5f9" : "#ffffff", color: "#0f172a", fontSize: "15px", pointerEvents: editId ? "none" : "auto" }}
                         />
+                        {editId && (
+                          <p style={{ margin: "6px 0 0", fontSize: 12.5, color: "#64748b" }}>
+                            Only the Accountant can change a salary after the teacher is created.
+                          </p>
+                        )}
                       </div>
                     </>
                   )}
