@@ -21,6 +21,7 @@ interface LoginResponseData {
   linkedStudentIds?: string[];
   homeroom?: string;
   designation?: string;
+  mustChangePassword?: boolean;
   user?: Partial<LoginResponseData>;
 }
 
@@ -75,7 +76,8 @@ function buildUserFromResponse(responseData: Partial<LoginResponseData> | undefi
     refreshToken: String(refreshToken),
     linkedStudentIds: source.linkedStudentIds,
     homeroom: source.homeroom,
-    designation: source.designation
+    designation: source.designation,
+    mustChangePassword: Boolean(source.mustChangePassword)
   };
 }
 
@@ -132,6 +134,7 @@ export async function getProfile(): Promise<User> {
     linkedStudentIds: responseData.linkedStudentIds,
     homeroom: responseData.homeroom,
     designation: responseData.designation,
+    mustChangePassword: Boolean(responseData.mustChangePassword),
     accessToken: window.localStorage.getItem("kindervale-access-token") ?? undefined,
     refreshToken: window.localStorage.getItem("kindervale-refresh-token") ?? undefined
   };

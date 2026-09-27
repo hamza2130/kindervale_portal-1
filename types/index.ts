@@ -12,6 +12,9 @@ export interface User {
   linkedStudentIds?: string[];
   homeroom?: string;
   designation?: string;
+  // Set by the backend whenever an Admin/Accountant generated or reset this login's password --
+  // gates every page behind a forced change-password screen until cleared.
+  mustChangePassword?: boolean;
 }
 
 export interface Student {

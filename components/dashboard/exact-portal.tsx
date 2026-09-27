@@ -38,6 +38,13 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [editId, setEditId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Forced password-change gate (user.mustChangePassword, set by the backend whenever an Admin/
+  // Accountant generated or reset this login's password). Kept as plain state here -- separate
+  // from the rest of the portal's state -- since it has to exist and work even before the legacy
+  // script/portal below has mounted at all.
+  const [forcedPasswordFields, setForcedPasswordFields] = useState({ currentPassword: "", newPassword: "", confirmNewPassword: "" });
+  const [forcedPasswordSubmitting, setForcedPasswordSubmitting] = useState(false);
+  const [forcedPasswordError, setForcedPasswordError] = useState("");
   // Tracks which legacy-menu page key is showing so a real React page (e.g. Classes & Sections)
   // can be swapped in over the legacy #content div for keys that don't have a SCRIPT renderer.
   const [currentPageKey, setCurrentPageKey] = useState<string>("");
@@ -2737,6 +2744,75 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
       setSubmitting(false);
     }
   };
+
+  const submitForcedPasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForcedPasswordError("");
+    if (forcedPasswordFields.newPassword.length < 6) {
+      setForcedPasswordError("New password must be at least 6 characters.");
+      return;
+    }
+    if (forcedPasswordFields.newPassword !== forcedPasswordFields.confirmNewPassword) {
+      setForcedPasswordError("New password and confirmation don't match.");
+      return;
+    }
+    setForcedPasswordSubmitting(true);
+    try {
+      await apiRequest("/auth/change-password", { method: "PATCH", data: forcedPasswordFields });
+      // Full reload rather than local state surgery: re-runs AuthProvider's own profile fetch,
+      // which now comes back with mustChangePassword: false, and the gate below just stops
+      // rendering -- no separate "clear the flag in three places" bookkeeping to get wrong.
+      window.location.reload();
+    } catch (err: any) {
+      setForcedPasswordError(err?.message || "Could not change password. Check your current password and try again.");
+      setForcedPasswordSubmitting(false);
+    }
+  };
+
+  // Blocks the entire portal -- nothing else renders -- until a password an Admin/Accountant
+  // handed the user is replaced with one only they know.
+  if (user?.mustChangePassword) {
+    return (
+      <div className="exact-portal-wrapper" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0b1220", padding: "24px" }}>
+        <form
+          onSubmit={submitForcedPasswordChange}
+          style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 16, padding: 28, boxShadow: "0 20px 60px rgba(0,0,0,0.35)" }}
+        >
+          <h2 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 800, color: "#0b1220" }}>Set a new password</h2>
+          <p style={{ margin: "0 0 18px", fontSize: 13.5, color: "#5b6472" }}>
+            Your account has a temporary password. Choose one only you know before continuing.
+          </p>
+          {forcedPasswordError && (
+            <div style={{ marginBottom: 14, padding: "10px 12px", borderRadius: 10, background: "#fdecee", color: "#b3261e", fontSize: 13 }}>
+              {forcedPasswordError}
+            </div>
+          )}
+          {(["currentPassword", "newPassword", "confirmNewPassword"] as const).map((field) => (
+            <div key={field} style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: "#33404f", marginBottom: 6 }}>
+                {field === "currentPassword" ? "Temporary password" : field === "newPassword" ? "New password" : "Confirm new password"}
+              </label>
+              <input
+                type="password"
+                required
+                minLength={field === "currentPassword" ? undefined : 6}
+                value={forcedPasswordFields[field]}
+                onChange={(e) => setForcedPasswordFields((prev) => ({ ...prev, [field]: e.target.value }))}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #d7dde5", fontSize: 14, boxSizing: "border-box" }}
+              />
+            </div>
+          ))}
+          <button
+            type="submit"
+            disabled={forcedPasswordSubmitting}
+            style={{ width: "100%", padding: "12px", borderRadius: 10, border: "none", background: "#0b1220", color: "#fff", fontWeight: 700, fontSize: 14, cursor: forcedPasswordSubmitting ? "default" : "pointer", opacity: forcedPasswordSubmitting ? 0.7 : 1 }}
+          >
+            {forcedPasswordSubmitting ? "Saving…" : "Save new password"}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="exact-portal-wrapper">
