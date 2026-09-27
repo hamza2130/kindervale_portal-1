@@ -2145,21 +2145,31 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
         const term = reportTerms()[termIdx];
         if (!term) { notify("That progress-check term is no longer configured"); return; }
         const student = (win.students || []).find((row: any) => row.id === studentId);
+        const status = card?.status === "Approved" ? "APPROVED" : card?.status === "Submitted" ? "PENDING" : "DRAFT";
+        // Approving is exclusively through POST /report-cards/:id/publish now (the backend
+        // rejects status: "APPROVED" on the regular PATCH) -- omit it from the body here and
+        // call publish separately below once the record exists, instead of relying on this same
+        // PATCH to both save the draft AND approve it in one call.
         const body = {
           studentId,
           term,
           className: student?.cls || "Unassigned",
           academicYear: win.portalSettings?.academicYear || String(new Date().getFullYear()),
           summary: JSON.stringify({ comments: card?.comments ?? {}, attendance: card?.attendance ?? {} }),
-          status: card?.status === "Approved" ? "APPROVED" : card?.status === "Submitted" ? "PENDING" : "DRAFT"
+          status: status === "APPROVED" ? undefined : status
         };
         try {
-          if (card?.id) {
-            await apiRequest(`/report-cards/${card.id}`, { method: "PATCH", data: body });
+          let reportCardId = card?.id;
+          if (reportCardId) {
+            await apiRequest(`/report-cards/${reportCardId}`, { method: "PATCH", data: body });
           } else {
             const created = await apiRequest<any>("/report-cards", { method: "POST", data: body });
             const row: JsonRow = created?.data ?? created;
-            if (row?.id && card) card.id = row.id;
+            reportCardId = row?.id;
+            if (reportCardId && card) card.id = reportCardId;
+          }
+          if (status === "APPROVED" && reportCardId) {
+            await apiRequest(`/report-cards/${reportCardId}/publish`, { method: "POST" });
           }
         } catch (error) {
           notify(errorMessage(error, "Could not save the progress check"));
