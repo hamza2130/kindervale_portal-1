@@ -65,7 +65,7 @@ export function LoginForm() {
           </select>
         </label>
         <p className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-600">
-          OTP verification required for Administrator, Daycare Admin & Principal logins. Demo OTP: <span className="font-semibold text-slate-800">0000</span>.
+          OTP verification required for Administrator, Daycare Admin & Principal logins.
         </p>
       </div>
 
@@ -116,11 +116,6 @@ export function LoginForm() {
         <button type="button" className="text-sm font-semibold text-brand-navy underline-offset-4 transition hover:text-brand-navy/80">
           Forgot Password?
         </button>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-white/80 px-4 py-3 text-sm text-slate-600 shadow-sm">
-        <span>Demo password: <span className="font-semibold text-slate-900">demo123</span></span>
-        <span className="font-semibold text-slate-800">admin · daycareadmin · principal · teacher · parent</span>
       </div>
 
       <p className="text-center text-xs text-slate-500">Use your username and password. Admins and principal must include OTP.</p>
