@@ -36,7 +36,10 @@ const STORAGE_ACCESS_TOKEN = "kindervale-access-token";
 const STORAGE_REFRESH_TOKEN = "kindervale-refresh-token";
 const STORAGE_USER = "kindervale-user";
 
-export const API_BASE_URL = "https://kindervale-backend.onrender.com/api";
+// NEXT_PUBLIC_API_BASE_URL lets a non-production deployment (e.g. the "staging" branch's Vercel
+// preview) point at a different backend -- set per-environment in Vercel's dashboard, scoped to
+// Preview only, so Production keeps using the hardcoded fallback and never needs this var set.
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://kindervale-backend.onrender.com/api";
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

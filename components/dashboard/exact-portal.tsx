@@ -1210,6 +1210,11 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
       return;
     }
     setMounted(true);
+    // The injected legacy SCRIPT's own fetch calls (login, OTP) read window.KV_API_BASE, falling
+    // back to the hardcoded production URL if unset -- it was never actually assigned anywhere,
+    // so a non-production deployment (e.g. a staging preview with NEXT_PUBLIC_API_BASE_URL set)
+    // would still silently log in against production. Keep both API paths pointed at the same backend.
+    (window as any).KV_API_BASE = API_BASE_URL;
     const timer = setTimeout(async () => {
       if (!document.getElementById("toast")) {
         const toastRoot = document.createElement("div");
