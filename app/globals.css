@@ -375,6 +375,15 @@
   .hamburger.active span:nth-child(1){transform:translateY(8px) rotate(45deg)}
   .hamburger.active span:nth-child(2){opacity:0}
   .hamburger.active span:nth-child(3){transform:translateY(-8px) rotate(-45deg)}
+  /* Desktop sidebar collapse: toggleSideMenu() already adds/removes .open on .side for the
+     mobile drawer -- :has() lets the grid react to that same class on desktop too, so clicking
+     the hamburger collapses/reopens the sidebar there without any JS changes. The button was
+     always visible at every width, but until this rule nothing on desktop ever read the class
+     it sets, so clicking it visibly did nothing above 880px. */
+  @media(min-width:881px){
+    .portal:has(.side.open){grid-template-columns:1fr}
+    .portal:has(.side.open) .side{display:none}
+  }
   .topbar-left{display:flex;align-items:center;gap:14px}
 
   /* Keep every portal, including the parent theme, flush with the mobile viewport. */
