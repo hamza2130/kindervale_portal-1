@@ -36,7 +36,12 @@ const STORAGE_ACCESS_TOKEN = "kindervale-access-token";
 const STORAGE_REFRESH_TOKEN = "kindervale-refresh-token";
 const STORAGE_USER = "kindervale-user";
 
-export const API_BASE_URL = "https://kindervale-backend.onrender.com/api";
+// NEXT_PUBLIC_API_URL lets a non-production run (local dev against a staging backend, or a
+// non-production deployment) point at a different backend -- matches the name already used by
+// the pre-existing (previously unwired) .env.production file. Set in .env.local for local dev,
+// or per-environment in Vercel's dashboard for a hosted non-production deployment; Production
+// needs no change, it keeps using the hardcoded fallback.
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://kindervale-backend.onrender.com/api";
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
