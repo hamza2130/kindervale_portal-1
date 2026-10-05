@@ -267,7 +267,7 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
       return {};
     }
   };
-  const documentDisplayName = (row: JsonRow) => documentMetadata(row).originalName || row?.title || "Document";
+  const documentDisplayName = (row: JsonRow) => escapeForMarkup(documentMetadata(row).originalName || row?.title || "Document");
   const documentUploadedOn = (row: JsonRow) => {
     const raw = row?.createdAt ? new Date(row.createdAt) : null;
     return raw && !Number.isNaN(raw.getTime())
@@ -280,6 +280,9 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
   const applyDocumentRows = (documentRows: JsonRow[]) => {
     if (typeof window === "undefined") return;
     const win = window as any;
+    // description is JSON.parse'd by documentMetadata() below -- escaping it here would mangle
+    // the JSON's own quote characters and silently break every parse. Escaped at the point of
+    // display instead (documentDisplayName), not at the row level.
     win.__documentRows = documentRows;
 
     const bookLists: Record<string, JsonRow | null> = { Kindervale: null, Daycare: null };
@@ -1028,23 +1031,27 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
           const win = window as any;
           const existing = win.teacherProfiles || {};
           existing[me.name] = { name: me.name, phone: me.phone ?? "", qualifications: me.qualifications ?? "", bio: me.bio ?? "" };
-          win.teacherProfiles = existing;
+          win.teacherProfiles = escapeForMarkup(existing);
         }
       } catch (_) { /* no teacher profile yet */ }
     }
 
-    win.attendanceRecords = portalAttendanceRecords;
-    win.homeworkRows = portalHomework;
-    win.examRows = normalizeList(exams);
-    win.reportCardRows = normalizeList(reports);
-    win.ANNUAL_CAL = calendarEventRows.map((event: any) => ({ date: event.date, title: event.title, type: event.type, portal: event.portal || "Both" }));
+    // These globals bypass assignScriptData -- unlike every other synced field, they're written
+    // straight to window with no escaping, the exact residual gap the old audit's XSS finding
+    // flagged (report cards/exam/document titles and teacher-profile fields written by a Teacher,
+    // read by Admin/Parent, innerHTML'd verbatim by the legacy script's templates).
+    win.attendanceRecords = escapeForMarkup(portalAttendanceRecords);
+    win.homeworkRows = escapeForMarkup(portalHomework);
+    win.examRows = escapeForMarkup(normalizeList(exams));
+    win.reportCardRows = escapeForMarkup(normalizeList(reports));
+    win.ANNUAL_CAL = escapeForMarkup(calendarEventRows.map((event: any) => ({ date: event.date, title: event.title, type: event.type, portal: event.portal || "Both" })));
     // These two were dead: declared with a hardcoded 2026 demo fallback and never reassigned from
     // real data anywhere, so the parent-facing Notices/Upcoming Events pages always showed the
     // same fake rows regardless of what was actually posted. Real data is already fetched above
     // (calendarEventRows, notificationRows) -- just needed to actually reach these two globals.
-    win.UPCOMING_EVENTS = calendarEventRows.map((event: any) => ({ date: event.date, title: event.title, desc: event.type || "School event", portal: event.portal || "Both" }));
-    win.ADMIN_NOTICES = notificationRows.map((notice: any) => ({ id: notice.id, date: notice.date, title: notice.title, desc: notice.body, portal: notice.portal || "Both" }));
-    win.portalSettings = settings;
+    win.UPCOMING_EVENTS = escapeForMarkup(calendarEventRows.map((event: any) => ({ date: event.date, title: event.title, desc: event.type || "School event", portal: event.portal || "Both" })));
+    win.ADMIN_NOTICES = escapeForMarkup(notificationRows.map((notice: any) => ({ id: notice.id, date: notice.date, title: notice.title, desc: notice.body, portal: notice.portal || "Both" })));
+    win.portalSettings = escapeForMarkup(settings);
     // Term dates were only ever an in-memory edit in the legacy script -- the real saved value
     // (once an admin has set one) now overrides the hardcoded fallback that TERM_DATES starts
     // with. Omit the key entirely when nothing's been saved yet, so the fallback stays in place
@@ -1499,7 +1506,7 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
               termDates: updated
             }
           });
-          win.portalSettings = { ...existing, termDates: updated };
+          win.portalSettings = escapeForMarkup({ ...existing, termDates: updated });
           assignScriptData({ TERM_DATES: updated });
           if (typeof win.toast === "function") win.toast("Term dates saved");
           if (typeof win.navigate === "function") win.navigate("settings");
@@ -2731,7 +2738,7 @@ export function ExactPortal({ defaultView = "dashboard" }: { defaultView?: strin
           if (me?.name) {
             const profiles = win.teacherProfiles || {};
             profiles[me.name] = { name: me.name, phone: me.phone ?? "", qualifications: me.qualifications ?? "", bio: me.bio ?? "" };
-            win.teacherProfiles = profiles;
+            win.teacherProfiles = escapeForMarkup(profiles);
           }
           notify("Profile saved \u2714");
           if (typeof win.navigate === "function") win.navigate("teacherprofile");
