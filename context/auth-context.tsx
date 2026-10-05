@@ -37,6 +37,12 @@ function clearAuthentication() {
   window.localStorage.removeItem("kindervale-user");
   window.localStorage.removeItem("kindervale-access-token");
   window.localStorage.removeItem("kindervale-refresh-token");
+  // The legacy embedded script seeds its in-memory report-card cache straight from this key at
+  // load time, before any server fetch happens -- on a shared/public device, the next person to
+  // log in would briefly see whatever report-card data the previous session had cached if their
+  // own first fetch 403s (e.g. a role with no report-cards access at all). Not scoped per-user,
+  // so the only safe lifetime for it is "until logout".
+  window.localStorage.removeItem("kv_reportCards");
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
